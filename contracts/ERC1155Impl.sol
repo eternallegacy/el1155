@@ -125,6 +125,14 @@ contract ERC1155Impl is ERC1155, Ownable {
         );
     }
 
+    function getInfo(uint256 id) public view returns (NftInfo memory) {
+        return nftInfos[id];
+    }
+
+    function getStats(uint256 id) public view returns (uint256) {
+        return mintedNum[id];
+    }
+
     function updatePrice(
         uint256 id,
         address chargeToken,
