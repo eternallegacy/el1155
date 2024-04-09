@@ -1,15 +1,18 @@
 // SPDX-License-Identifier: AGPL-3.0-only
 pragma solidity ^0.8.20;
 
-contract NftLog {
+import "@openzeppelin/contracts/access/Ownable.sol";
+
+contract NftLog is Ownable {
     address public signer;
     string public constant name = "NftLog";
     string public constant version = "1.0";
     bytes32 public DOMAIN_SEPARATOR;
 
     event LogMsg(address user, address signer, string log, uint256 height);
+    event SetSigner(address oldSigner, address newSigner);
 
-    constructor() {
+    constructor() Ownable(msg.sender) {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256(
@@ -23,13 +26,18 @@ contract NftLog {
         );
     }
 
+    function setSigner(address newSigner) public onlyOwner {
+        address old = signer;
+        signer = newSigner;
+        emit SetSigner(old, newSigner);
+    }
+
     function logSig(
-        address signer,
         string calldata log,
         uint256 nonce,
         bytes calldata sig
     ) public {
-        bytes32 hash = hasMsg(msg.sender, signer, log, nonce);
+        bytes32 hash = hashMsg(msg.sender, log, nonce);
         require(_checkInSigs(hash, sig), "NftLog: invalid signature");
         emit LogMsg(msg.sender, signer, log, block.number);
     }
@@ -43,9 +51,8 @@ contract NftLog {
         return signer == signerAddr;
     }
 
-    function hasMsg(
+    function hashMsg(
         address user,
-        address signer,
         string calldata log,
         uint256 nonce
     ) public view returns (bytes32) {
@@ -57,10 +64,9 @@ contract NftLog {
                     keccak256(
                         abi.encode(
                             keccak256(
-                                "logSig(address user,address signer,string log,uint256 nonce)"
+                                "logSig(address user,string log,uint256 nonce)"
                             ),
                             user,
-                            signer,
                             keccak256(bytes(log)),
                             nonce
                         )
