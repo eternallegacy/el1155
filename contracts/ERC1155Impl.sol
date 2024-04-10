@@ -57,6 +57,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         uint256 id,
         string URI,
         uint256 totalLimit,
+        uint256 balanceLimit,
         uint256 enableBlockHeight
     );
 
@@ -125,7 +126,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         );
     }
 
-    function getInfo(uint256 id) public view returns (NftInfo memory) {
+    function getInfo(uint256 id) public view returns (NftInfo memory){
         return nftInfos[id];
     }
 
@@ -151,6 +152,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         uint256 id,
         string calldata URI,
         uint256 totalLimit,
+        uint256 balanceLimit,
         uint256 enableBlockHeight
     ) public onlyOwner {
         NftInfo storage nftInfo = nftInfos[id];
@@ -159,10 +161,15 @@ contract ERC1155Impl is ERC1155, Ownable {
             nftInfo.totalLimit >= mintedNum[id],
             "ERC1155Impl: minted amount exceed limit"
         );
+        require(
+            nftInfo.balanceLimit <= balanceLimit,
+            "ERC1155Impl: balanceLimit is too little"
+        );
         nftInfo.URI = URI;
         nftInfo.totalLimit = totalLimit;
+        nftInfo.balanceLimit = balanceLimit;
         nftInfo.enableBlockHeight = enableBlockHeight;
-        emit Update(id, URI, totalLimit, enableBlockHeight);
+        emit Update(id, URI, totalLimit, balanceLimit, enableBlockHeight);
     }
 
     function mint(uint256 id, uint256 amount) public {
@@ -218,23 +225,23 @@ contract ERC1155Impl is ERC1155, Ownable {
     ) public view returns (bytes32) {
         //ERC-712
         return
-            keccak256(
-                abi.encodePacked(
-                    "\x19\x01",
-                    DOMAIN_SEPARATOR,
-                    keccak256(
-                        abi.encode(
-                            keccak256(
-                                "burnParams(uint256 id,uint256 amount,address user,uint256 nonce)"
-                            ),
-                            id,
-                            amount,
-                            user,
-                            nonce
-                        )
+        keccak256(
+            abi.encodePacked(
+                "\x19\x01",
+                DOMAIN_SEPARATOR,
+                keccak256(
+                    abi.encode(
+                        keccak256(
+                            "burnParams(uint256 id,uint256 amount,address user,uint256 nonce)"
+                        ),
+                        id,
+                        amount,
+                        user,
+                        nonce
                     )
                 )
-            );
+            )
+        );
     }
 
     function _checkInSigs(
@@ -253,11 +260,11 @@ contract ERC1155Impl is ERC1155, Ownable {
         require(sig.length == 65);
 
         assembly {
-            // first 32 bytes, after the length prefix.
+        // first 32 bytes, after the length prefix.
             r := mload(add(sig, 32))
-            // second 32 bytes.
+        // second 32 bytes.
             s := mload(add(sig, 64))
-            // final byte (first byte of the next 32 bytes).
+        // final byte (first byte of the next 32 bytes).
             v := byte(0, mload(add(sig, 96)))
         }
 
