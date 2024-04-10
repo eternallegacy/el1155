@@ -126,7 +126,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         );
     }
 
-    function getInfo(uint256 id) public view returns (NftInfo memory){
+    function getInfo(uint256 id) public view returns (NftInfo memory) {
         return nftInfos[id];
     }
 
@@ -202,15 +202,14 @@ contract ERC1155Impl is ERC1155, Ownable {
     function burnWithSig(
         uint256 id,
         uint256 amount,
-        address user,
         uint256 nonce,
         bytes calldata sig
     ) public onlyNonce(nonce) {
         require(
-            super.balanceOf(user, id) >= amount,
+            super.balanceOf(msg.sender, id) >= amount,
             "ERC1155Impl: exceed balance"
         );
-        bytes32 hash = hashBurnParams(id, amount, user, nonce);
+        bytes32 hash = hashBurnParams(id, amount, msg.sender, nonce);
         require(_checkInSigs(hash, sig), "NftTemplate: invalid signature");
 
         _burn(msg.sender, id, amount);
@@ -225,23 +224,23 @@ contract ERC1155Impl is ERC1155, Ownable {
     ) public view returns (bytes32) {
         //ERC-712
         return
-        keccak256(
-            abi.encodePacked(
-                "\x19\x01",
-                DOMAIN_SEPARATOR,
-                keccak256(
-                    abi.encode(
-                        keccak256(
-                            "burnParams(uint256 id,uint256 amount,address user,uint256 nonce)"
-                        ),
-                        id,
-                        amount,
-                        user,
-                        nonce
+            keccak256(
+                abi.encodePacked(
+                    "\x19\x01",
+                    DOMAIN_SEPARATOR,
+                    keccak256(
+                        abi.encode(
+                            keccak256(
+                                "burnParams(uint256 id,uint256 amount,address user,uint256 nonce)"
+                            ),
+                            id,
+                            amount,
+                            user,
+                            nonce
+                        )
                     )
                 )
-            )
-        );
+            );
     }
 
     function _checkInSigs(
@@ -260,11 +259,11 @@ contract ERC1155Impl is ERC1155, Ownable {
         require(sig.length == 65);
 
         assembly {
-        // first 32 bytes, after the length prefix.
+            // first 32 bytes, after the length prefix.
             r := mload(add(sig, 32))
-        // second 32 bytes.
+            // second 32 bytes.
             s := mload(add(sig, 64))
-        // final byte (first byte of the next 32 bytes).
+            // final byte (first byte of the next 32 bytes).
             v := byte(0, mload(add(sig, 96)))
         }
 
