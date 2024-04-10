@@ -188,6 +188,7 @@ contract ERC1155Impl is ERC1155, Ownable {
             amount * nftInfo.price
         );
         _mint(msg.sender, id, amount, bytes(nftInfo.URI));
+        mintedNum[id] += amount;
     }
 
     function burn(uint256 id, uint256 amount) public {
