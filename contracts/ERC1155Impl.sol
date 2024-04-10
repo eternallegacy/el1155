@@ -196,7 +196,6 @@ contract ERC1155Impl is ERC1155, Ownable {
             "ERC1155Impl: exceed balance"
         );
         _burn(msg.sender, id, amount);
-        mintedNum[id] -= amount;
     }
 
     function burnWithSig(
@@ -213,7 +212,6 @@ contract ERC1155Impl is ERC1155, Ownable {
         require(_checkInSigs(hash, sig), "NftTemplate: invalid signature");
 
         _burn(msg.sender, id, amount);
-        mintedNum[id] -= amount;
     }
 
     function hashBurnParams(
