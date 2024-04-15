@@ -172,6 +172,10 @@ contract ERC1155Impl is ERC1155, Ownable {
         emit Update(id, URI, totalLimit, balanceLimit, enableBlockHeight);
     }
 
+    function uri(uint256 tokenId) public view override returns (string memory) {
+        return nftInfos[tokenId].URI;
+    }
+
     function mint(uint256 id, uint256 amount) public {
         NftInfo storage nftInfo = nftInfos[id];
         require(
