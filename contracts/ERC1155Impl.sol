@@ -158,12 +158,8 @@ contract ERC1155Impl is ERC1155, Ownable {
         NftInfo storage nftInfo = nftInfos[id];
         require(nftInfo.enableBlockHeight != 0, "ERC1155Impl: invalid id");
         require(
-            nftInfo.totalLimit >= mintedNum[id],
+            totalLimit >= mintedNum[id],
             "ERC1155Impl: minted amount exceed limit"
-        );
-        require(
-            nftInfo.balanceLimit <= balanceLimit,
-            "ERC1155Impl: balanceLimit is too little"
         );
         nftInfo.URI = URI;
         nftInfo.totalLimit = totalLimit;
@@ -179,7 +175,11 @@ contract ERC1155Impl is ERC1155, Ownable {
     function mint(uint256 id, uint256 amount) public {
         NftInfo storage nftInfo = nftInfos[id];
         require(
-            mintedNum[id] + amount < nftInfo.totalLimit,
+            block.number >= nftInfo.enableBlockHeight,
+            "ERC1155Impl: enableBlockHeight not reached"
+        );
+        require(
+            mintedNum[id] + amount <= nftInfo.totalLimit,
             "ERC1155Impl: exceed limit"
         );
         require(
@@ -192,6 +192,21 @@ contract ERC1155Impl is ERC1155, Ownable {
             amount * nftInfo.price
         );
         _mint(msg.sender, id, amount, bytes(nftInfo.URI));
+        mintedNum[id] += amount;
+    }
+
+    function rewardMint(address to, uint256 id, uint256 amount) public {
+        NftInfo storage nftInfo = nftInfos[id];
+        require(msg.sender == nftInfo.receiver, "ERC1155Impl: no privilege");
+        require(
+            mintedNum[id] + amount <= nftInfo.totalLimit,
+            "ERC1155Impl: exceed limit"
+        );
+        require(
+            super.balanceOf(to, id) + amount <= nftInfo.balanceLimit,
+            "ERC1155Impl: balance exceed limit"
+        );
+        _mint(to, id, amount, bytes(nftInfo.URI));
         mintedNum[id] += amount;
     }
 
