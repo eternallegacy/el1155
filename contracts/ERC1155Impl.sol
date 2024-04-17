@@ -158,12 +158,8 @@ contract ERC1155Impl is ERC1155, Ownable {
         NftInfo storage nftInfo = nftInfos[id];
         require(nftInfo.enableBlockHeight != 0, "ERC1155Impl: invalid id");
         require(
-            nftInfo.totalLimit >= mintedNum[id],
+            totalLimit >= mintedNum[id],
             "ERC1155Impl: minted amount exceed limit"
-        );
-        require(
-            nftInfo.balanceLimit <= balanceLimit,
-            "ERC1155Impl: balanceLimit is too little"
         );
         nftInfo.URI = URI;
         nftInfo.totalLimit = totalLimit;
@@ -183,7 +179,7 @@ contract ERC1155Impl is ERC1155, Ownable {
             "ERC1155Impl: enableBlockHeight not reached"
         );
         require(
-            mintedNum[id] + amount < nftInfo.totalLimit,
+            mintedNum[id] + amount <= nftInfo.totalLimit,
             "ERC1155Impl: exceed limit"
         );
         require(
@@ -203,7 +199,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         NftInfo storage nftInfo = nftInfos[id];
         require(msg.sender == nftInfo.receiver, "ERC1155Impl: no privilege");
         require(
-            mintedNum[id] + amount < nftInfo.totalLimit,
+            mintedNum[id] + amount <= nftInfo.totalLimit,
             "ERC1155Impl: exceed limit"
         );
         require(
