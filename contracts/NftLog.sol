@@ -12,7 +12,7 @@ contract NftLog is Ownable {
     event LogMsg(address user, address signer, string log, uint256 height);
     event SetSigner(address oldSigner, address newSigner);
 
-    constructor() Ownable(msg.sender) {
+    constructor() Ownable() {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256(

@@ -26,7 +26,7 @@ contract ERC1155Impl is ERC1155, Ownable {
     mapping(uint256 => NftInfo) public nftInfos;
     mapping(uint256 => uint256) public mintedNum;
 
-    string public constant name = "ERC1155Impl";
+    string public constant name = "Eternal Legacy Pack";
     string public constant version = "1.0";
     bytes32 public DOMAIN_SEPARATOR;
 
@@ -61,7 +61,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         uint256 enableBlockHeight
     );
 
-    constructor(string memory uri_) ERC1155(uri_) Ownable(msg.sender) {
+    constructor(string memory uri_) ERC1155(uri_) Ownable() {
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256(
@@ -172,7 +172,7 @@ contract ERC1155Impl is ERC1155, Ownable {
         return nftInfos[tokenId].URI;
     }
 
-    function mint(uint256 id, uint256 amount) public {
+    function mint(uint256 id, uint256 amount) public payable {
         NftInfo storage nftInfo = nftInfos[id];
         require(
             block.number >= nftInfo.enableBlockHeight,
@@ -186,11 +186,16 @@ contract ERC1155Impl is ERC1155, Ownable {
             super.balanceOf(msg.sender, id) + amount <= nftInfo.balanceLimit,
             "ERC1155Impl: balance exceed limit"
         );
-        IERC20(nftInfo.chargeToken).safeTransferFrom(
-            msg.sender,
-            nftInfo.receiver,
-            amount * nftInfo.price
-        );
+        if (isNativeToken(nftInfo.chargeToken)) {
+            require(msg.value >= (amount * nftInfo.price), "ERC1155Impl: msg.value not enough");
+            payable(nftInfo.receiver).transfer(msg.value);
+        } else {
+            IERC20(nftInfo.chargeToken).safeTransferFrom(
+                msg.sender,
+                nftInfo.receiver,
+                amount * nftInfo.price
+            );
+        }
         _mint(msg.sender, id, amount, bytes(nftInfo.URI));
         mintedNum[id] += amount;
     }
@@ -286,5 +291,9 @@ contract ERC1155Impl is ERC1155, Ownable {
         }
 
         return (v, r, s);
+    }
+
+    function isNativeToken(address token) internal pure returns (bool) {
+        return token == address(0);
     }
 }
