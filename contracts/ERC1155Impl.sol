@@ -99,10 +99,6 @@ contract ERC1155Impl is ERC1155, Ownable {
             enableBlockHeight >= block.number,
             "ERC1155Impl: invalid enableBlockHeight"
         );
-        require(
-            chargeToken.code.length != 0,
-            "ERC1155Impl: invalid chargeToken"
-        );
         require(nftInfos[id].enableBlockHeight == 0, "ERC1155Impl: existed id");
         nftInfos[id] = NftInfo(
             id,
@@ -186,15 +182,17 @@ contract ERC1155Impl is ERC1155, Ownable {
             super.balanceOf(msg.sender, id) + amount <= nftInfo.balanceLimit,
             "ERC1155Impl: balance exceed limit"
         );
-        if (isNativeToken(nftInfo.chargeToken)) {
-            require(msg.value >= (amount * nftInfo.price), "ERC1155Impl: msg.value not enough");
-            payable(nftInfo.receiver).transfer(msg.value);
-        } else {
-            IERC20(nftInfo.chargeToken).safeTransferFrom(
-                msg.sender,
-                nftInfo.receiver,
-                amount * nftInfo.price
-            );
+        if ((amount * nftInfo.price) > 0) {
+            if (isNativeToken(nftInfo.chargeToken)) {
+                require(msg.value >= (amount * nftInfo.price), "ERC1155Impl: msg.value not enough");
+                payable(nftInfo.receiver).transfer(msg.value);
+            } else {
+                IERC20(nftInfo.chargeToken).safeTransferFrom(
+                    msg.sender,
+                    nftInfo.receiver,
+                    amount * nftInfo.price
+                );
+            }
         }
         _mint(msg.sender, id, amount, bytes(nftInfo.URI));
         mintedNum[id] += amount;
