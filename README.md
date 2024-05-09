@@ -17,3 +17,4 @@ npx hardhat ignition deploy ./ignition/modules/ERC1155Impl.ts
 Base Chain: 
 
 - Eternal Legacy Pack (ERC1155Impl) : 0xf578a6C18c3022693e1241a9a27b72764F3e4C2A
+- Eternal Legacy Log: 0x4A1a58fde77d5be5f797bb6b454E788C48719462
